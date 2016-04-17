@@ -1401,118 +1401,37 @@ class WPUF_Render_Form {
             <div id="wpuf-<?php echo $attr['name']; ?>-upload-container">
                 <div class="wpuf-attachment-upload-filelist" data-type="file" data-required="<?php echo $attr['required']; ?>">
                     <a id="wpuf-<?php echo $attr['name']; ?>-pickfiles" class="button file-selector <?php echo ' wpuf_' . $attr['name'] . '_' . $form_id; ?>" href="#"><?php _e( 'Select Image', 'wpuf' ); ?></a>
-                    <button id="resizeImage">resize</button>
-                    <div id="imageContainer"></div>
-                    <div style="border: 1px solid black; pading: 10px">
-                        <canvas id="uniCanvas"></canvas>
-                    </div>
-                    <input type="hidden" name="abc" value="" id="jcropCoord">
-<!--                    <script>-->
-<!--                        //demo on JcropAPI-->
-<!--                        var ACCEPT_WIDTH = 511;-->
-<!--                        var ACCEPT_HEIGHT = 511;-->
-<!--                        var selectArea = [];-->
-<!--                        var canvas = $("#uniCanvas");-->
-<!--                        $("#resizeImage").on("click", function(){-->
-<!--                            resizeImage();-->
-<!--                        });-->
-<!--                        $("#uploadResizedImage").on("click", function(){-->
-<!--                            uploadResizedImage();-->
-<!--                        });-->
-<!--                        var imageContainer = $("#imageContainer");-->
-<!--                        $("#imageFile").on('change', function(){-->
-<!--                            if(typeof (FileReader) != "undefined"){-->
-<!--                                var reader = new FileReader();-->
-<!--                                reader.onload = function(e){-->
-<!--                                    //new image uploaded, clear the old one-->
-<!--                                    imageContainer.empty();-->
-<!--                                    //create new  image uploaded-->
-<!--                                    var imageUploaded = $("<img>");-->
-<!--                                    //get image source-->
-<!--                                    var imageSource = e.target.result;-->
-<!--                                    //add src, id to image uploaded-->
-<!--                                    imageUploaded.attr("id", "imageUploaded");-->
-<!--                                    imageUploaded.attr("src", imageSource);-->
-<!--                                    //append to image container-->
-<!--                                    imageUploaded.appendTo(imageContainer);-->
-<!--                                    imageUploaded.Jcrop({-->
-<!--                                        bgColor: 'black',-->
-<!--                                        bgOpacity: .4,-->
-<!--                                        minSize: [511, 511],-->
-<!--                                        maxSize: [511, 511],-->
-<!--                                        setSelect: [0, 0, 511, 511],-->
-<!--                                        aspectRatio: 1,-->
-<!--                                        onSelect: getCoords-->
-<!--                                    });-->
-<!--                                    imageUploaded.load(function(){-->
-<!--//                                        console.log("imageUploaded.width/height: %s, %s", imageUploaded.width(), imageUploaded.height());-->
-<!--//                                            if(imageUploaded.width() < ACCEPT_WIDTH || $(imageUploaded).height() < ACCEPT_HEIGHT){-->
-<!--//                                                imageContainer.empty();-->
-<!--//                                                window.alert(-->
-<!--//                                                        "imageUploaded: discarded, ACCEPT_WIDTH: " + ACCEPT_WIDTH + ",ACCEPT_HEIGHT: " + ACCEPT_HEIGHT);-->
-<!--//                                            }-->
-<!--                                    });-->
-<!--                                    // imageUploaded.on("load", function(){-->
-<!--                                    //     console.log("imageUploaded.width/height: %s, %s", imageUploaded.width(), imageUploaded.height());-->
-<!--                                    //     if(imageUploaded.width() < ACCEPT_WIDTH || $(imageUploaded).height() < ACCEPT_HEIGHT){-->
-<!--                                    //         imageContainer.empty();-->
-<!--                                    //         window.alert(-->
-<!--                                    //                 "imageUploaded: discarded, ACCEPT_WIDTH: " + ACCEPT_WIDTH + ",ACCEPT_HEIGHT: " + ACCEPT_HEIGHT);-->
-<!--                                    //     }-->
-<!--                                    // });-->
-<!--                                };-->
-<!--                                console.log($(this)); //[list img elements], array-->
-<!--                                console.log($(this)[0]); //this img element-->
-<!--                                // console.log($(this).files); //undefined-->
-<!--                                console.log($(this)[0].files); //list files-->
-<!--                                console.log($(this)[0].files[0]); //this file-->
-<!--                                var file = $(this)[0].files[0];-->
-<!--                                if(file.type.match("image/*")){-->
-<!--                                    //just handle read, when file is image-->
-<!--                                    reader.readAsDataURL($(this)[0].files[0]);-->
-<!--                                }else{-->
-<!--                                    window.alert("please upload an image");-->
-<!--                                }-->
-<!--                            }else{-->
-<!--                                alert("This browser does not support FileReader.");-->
-<!--                            }-->
-<!--                        });-->
-<!--                        function resizeImage(){-->
-<!--                            if(selectArea){-->
-<!--                                /**@warn NEED selectArea from getCoordsd */-->
-<!--                                var canvas = document.querySelector('#uniCanvas');-->
-<!--                                var ctx = canvas.getContext('2d');-->
-<!--                                var img = document.querySelector("#imageUploaded");-->
-<!---->
-<!--                                canvas.width = selectArea.w;-->
-<!--                                canvas.height = selectArea.h;-->
-<!--                                console.log("resize image by canvas", selectArea);-->
-<!--                                ctx.drawImage(img, selectArea.x, selectArea.y, selectArea.w, selectArea.h, 0, 0, selectArea.w,-->
-<!--                                        selectArea.h);-->
-<!--                            }else{-->
-<!--                                window.prompt("select before drop");-->
-<!--                            }-->
-<!--                        }-->
-<!--                        function getCoords(c){-->
-<!--                            selectArea = c;-->
-<!--                            console.log(selectArea);-->
-<!--                        }-->
-<!--                        function uploadResizedImage(){-->
-<!--                            var canvas = document.querySelector("#uniCanvas");-->
-<!--                            var dataURL = canvas.toDataURL();-->
-<!--                            console.log("upload to server, dataURL: %s", dataURL);-->
-<!--                            var url = "server side, please handle me";-->
-<!--                            $.ajax({-->
-<!--                                type: "POST",-->
-<!--                                url: url,-->
-<!--                                data: {-->
-<!--                                    imgBase64: dataURL-->
-<!--                                }-->
-<!--                            }).done(function(response) {-->
-<!--                                console.log(response);-->
-<!--                            });-->
-<!--                        }-->
-<!--                    </script>-->
+
+                    <!--modal allow resize-->
+                    <div class="modal fade" tabindex="-1" role="dialog" id="resizeImageModal">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <h4 class="modal-title">resize image</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div id="fileReaderProcessBar" class="col-md-3">
+                                            <div class="progress">
+                                                <div id="uploadProcess" class="progress-bar" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:0%">0%</div>
+                                            </div>
+                                        </div>
+                                        <div id="imageContainer" class="col-md-6"></div>
+                                        <input type="hidden" name="selectArea" value="">
+                                        <img src="http://www.planwallpaper.com/static/images/butterfly-wallpaper.jpeg">
+                                        <canvas id="uniCanvas" width="0" height="0"></canvas>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-primary">Save changes</button>
+                                </div>
+                            </div><!-- /.modal-content -->
+                        </div><!-- /.modal-dialog -->
+                    </div><!-- /.modal -->
+                    <button id="test"  data-toggle="modal" data-target="#resizeImageModal">show modal</button>
+<!--                    <button id="resizeImage">resize</button>-->
 
                     <ul class="wpuf-attachment-list thumbnails">
                         <?php
@@ -1541,10 +1460,21 @@ class WPUF_Render_Form {
             <span class="wpuf-help"><?php echo stripslashes( $attr['help'] ); ?></span>
 
         </div> <!-- .wpuf-fields -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jcrop/0.9.12/css/jquery.Jcrop.min.css">
         <script type="text/javascript">
+//            jQuery(document).ready(function(){
+//                new WPUF_Uploader('wpuf-<?php //echo $attr['name']; ?>//-pickfiles', 'wpuf-<?php //echo $attr['name']; ?>//-upload-container', <?php //echo $attr['count']; ?>//, '<?php //echo $attr['name']; ?>//', 'jpg,jpeg,gif,png,bmp', <?php //echo $attr['max_size'] ?>//);
+
+//            });
             jQuery(function($) {
                 new WPUF_Uploader('wpuf-<?php echo $attr['name']; ?>-pickfiles', 'wpuf-<?php echo $attr['name']; ?>-upload-container', <?php echo $attr['count']; ?>, '<?php echo $attr['name']; ?>', 'jpg,jpeg,gif,png,bmp', <?php echo $attr['max_size'] ?>);
+                $("#test").on("click", function(e){
+                    console.log("test click");
+                    e.preventDefault();
+                });
             });
+
         </script>
     <?php
 

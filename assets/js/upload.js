@@ -1,12 +1,4 @@
-
-	/**
-	 * Upload handler helper
-	 *
-	 * @param string {browse_button} browse_button ID of the pickfile
-	 * @param string {container} container ID of the wrapper
-	 * @param int {max} maximum number of file uplaods
-	 * @param string {type}
-	 */
+; (function($){
 	window.WPUF_Uploader = function (browse_button, container, max, type, allowed_type, max_file_size) {
 		this.container = container;
 		this.browse_button = browse_button;
@@ -41,301 +33,110 @@
 		});
 
 		//attach event handlers
-		this.uploader.bind('Init', $.proxy(this, 'init'));
-		//this.uploader.bind('FilesAdded', $.proxy(this, 'add'));
 		this.uploader.bind('FilesAdded', $.proxy(this, 'added'));
-		//this.uploader.bind('QueueChanged', $.proxy(this, 'upload'));
-		this.uploader.bind('UploadProgress', $.proxy(this, 'progress'));
-		this.uploader.bind('Error', $.proxy(this, 'error'));
-		this.uploader.bind('FileUploaded', $.proxy(this, 'uploaded'));
-
 		this.uploader.init();
 
 		$('#' + container).on('click', 'a.attachment-delete', $.proxy(this.removeAttachment, this));
-		var wpufUploader = this;
-		$("#resizeImage").on("click", function(){
-			console.log("resize...");
-			wpufUploader.resizeImage();
-		});
+		//var windowInnerHeight = window.innerHeight;
+		//var modalHeight = Math.round(windowInnerHeight * 4 / 10);console.log(modalHeight);
+		//$("#imageContainer").css({
+		//	'min-height': 511,
+		//	height: modalHeight
+		//});
 	};
-
 	WPUF_Uploader.prototype = {
-
-		isResized: false,
-		fileName: "",
-		selectArea: [],
+		ACCEPT_WIDTH: 511,
+		ACCEPT_HEIGHT: 511,
 		getCoords: function(c){
-			//console.log(this);
-			//this.selectArea = c;
-
-			$("#jcropCoord").val(JSON.stringify(c));
+			console.log(c);
+			$("#selectArea").val(JSON.stringify(c));
 		},
-
-		init: function(up, params){
-			var wpufUploader = this;
-			this.showHide();
-
-		},
-		add: function(up, files){
-			console.log("uploader add file");
-			var nativeFile = files[0].getNative();
-			this.uploader.removeFile(files[0]);
-			this.fileName = files[0].name;
-			this.addImageUploaded(nativeFile);
-		},
-		showHide: function(){
-
-			if(this.count >= this.max){
-				$('#' + this.container).find('.file-selector').hide();
-
-				return;
-			}
-			;
-
-			$('#' + this.container).find('.file-selector').show();
-		},
-
-		addImageUploaded: function(file){
-			console.log(this);
-			var wpufUploader = this;
-			var canvas = document.querySelector('#uniCanvas');
-			var ctx = canvas.getContext('2d');
+		added: function (up, files) {
+			var wp = this;
 			var imageContainer = $("#imageContainer");
-			var getCoords = wpufUploader.getCoords;
+			/**
+			 * show modal
+			 */
+			var resizeImageModal = $("#resizeImageModal");
+
+			var file = files[0];
+			var nativeFile = file.getNative();
+			console.log(nativeFile);
+			/**
+			 * read nativeFile, append to imageContainer
+			 */
 			if(typeof (FileReader) != "undefined"){
 				var reader = new FileReader();
 				reader.onload = function(e){
+					//get image source
+					var imageSource = imagege.target.result;
 					//new image uploaded, clear the old one
 					imageContainer.empty();
-					canvas.width = 0;
-					canvas.height = 0;
-					ctx.clearRect(0, 0, canvas.width, canvas.height);
 					//create new  image uploaded
 					var imageUploaded = $("<img>");
-					//get image source
-					var imageSource = e.target.result;
 					//add src, id to image uploaded
 					imageUploaded.attr("id", "imageUploaded");
-					imageUploaded.attr("src", imageSource);
-					//append to image container
-					imageUploaded.appendTo(imageContainer);
-					$("#wpuf-insert-image-container").Jcrop();
-					imageUploaded.Jcrop({
-						aspectRatio: 1,
-						onSelect: getCoords
+					imageUploaded.css({
+						'min-height': '100%',
+						width: 'auto'
 					});
+					imageUploaded.attr("src", imageSource);
+					//imageUploaded.appendTo(imageContainer);
+					//append to image container
+					imageUploaded.on("load", function(){
+						console.log("modal height");
+						console.log(resizeImageModal.height());
+						var imageWidth = imageUploaded.width();
+						var imageHeight = imageUploaded.height();
+						console.log(imageWidth);
+						console.log(imageHeight);
+						//if(imageWidth < wp.ACCEPT_WIDTH || imageHeight < wp.ACCEPT_HEIGHT){
+						//	imageContainer.empty();
+						//	window.alert(
+						//		"imageUploaded: discarded, ACCEPT_WIDTH: " + wp.ACCEPT_WIDTH + ",ACCEPT_HEIGHT: " + wp.ACCEPT_HEIGHT);
+						//	return
+						//}
+						/**
+						 * set height for imageContainer
+						 */
+						//var containerWidth = 0;
+						//var containerHeight = imageContainer.height();
+						//if(containerHeight < imageHeight){
+						//	containerWidth = Math.round((imageContainer.height()) / imageHeight * imageWidth);
+						//}
+						//if(containerHeight > imageHeight){
+						//	containerHeight = imageHeight;
+						//	containerWidth = imageWidth;
+						//}
+						//imageContainer.css({
+						//	width: containerWidth,
+						//	height: containerHeight
+						//});
+						resizeImageModal.modal("show");
+					});
+					imageUploaded.css({
+						width: 1049
+					});
+					//resizeImageModal.modal("show");
+					imageUploaded.Jcrop({
+						bgColor: 'black',
+						bgOpacity: .4,
+						minSize: [wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
+						maxSize: [wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
+						setSelect: [0, 0, wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
+						aspectRatio: 1,
+						onSelect: wp.getCoords
+					});
+
+					/**
+					 * handle width height 511
+					 */
 				};
-				reader.readAsDataURL(file);
+				reader.readAsDataURL(nativeFile);
 			}else{
 				alert("This browser does not support FileReader.");
 			}
-		},
-		resizeImage: function(){
-			var wpufUploader = this;
-			console.log("resize click");
-			var canvas = document.querySelector('#uniCanvas');
-			var ctx = canvas.getContext('2d');
-			//console.log(this.selectArea);
-			//var selectArea = this.selectArea; console.log(selectArea);
-			var selectArea = JSON.parse($("#jcropCoord").val());console.log("selectArea");console.log(selectArea);
-			var imageContainer = $("#imageContainer");
-			if(selectArea.length > 0){
 
-			}
-			if(selectArea){
-				var img = document.querySelector("#imageUploaded");
-				canvas.width = selectArea.w;
-				canvas.height = selectArea.h;
-				//canvas.width = 200;
-				//canvas.height = 200;
-				ctx.drawImage(img, selectArea.x, selectArea.y, selectArea.w, selectArea.h, 0, 0, selectArea.w, selectArea.h);
-				//ctx.drawImage(img, 20, 30, 200, 200, 0, 0, 200, 200);
-				//imageContainer.empty();
-
-			}else{
-				window.prompt("select before drop");
-			}
-			var dataUrl = canvas.toDataURL();
-			//var canvasDrawImage = $("<img>");
-			//canvasDrawImage.attr("src", dataUrl);
-			//canvasDrawImage.attr("id", "canvasDrawImage");
-			//canvasDrawImage.appendTo(imageContainer);
-			//var blobBin = atob(dataUrl.split(',')[1]);
-			//var array = [];
-			//for(var i = 0; i < blobBin.length; i++){
-			//	array.push(blobBin.charCodeAt(i));
-			//}
-			//var file = new Blob([new Uint8Array(array)], {type: 'image/png'});
-			//this.uploader.addFile(file);
-			// convert base64/URLEncoded data component to raw binary data held in a string
-
-
-
-
-			var byteString;
-			if (dataUrl.split(',')[0].indexOf('base64') >= 0)
-				byteString = atob(dataUrl.split(',')[1]);
-			else
-				byteString = unescape(dataUrl.split(',')[1]);
-			// separate out the mime component
-			var mimeString = dataUrl.split(',')[0].split(':')[1].split(';')[0];console.log(mimeString);
-			// write the bytes of the string to a typed array
-			var ia = new Uint8Array(byteString.length);
-			for (var i = 0; i < byteString.length; i++) {
-				ia[i] = byteString.charCodeAt(i);
-			}
-
-
-			var uploaderSettings = this.uploader.settings;
-
-			var nativeFile = new Blob([ia], {type: mimeString});console.log("nativeFile"); console.log(nativeFile);
-			nativeFile.name = "hoanganh.png";
-			//console.log(nativeFile);
-			//var ext = mimeString.substr(6, mimeString.length);
-			//console.log(ext);
-			//var file = new plupload.File(nativeFile);
-			var formData = new FormData();
-			formData.append("wpuf_file", nativeFile, "hoanganh.png");
-			//console.log("formData");console.log(formData);
-			//console.log(formData);
-			var oReq = new XMLHttpRequest();
-			//oReq.onload = function(){
-			//	console.log(oReq.response);
-			//};
-			console.log(wpufUploader.uploader.settings.url);
-			oReq.open("post", "http://localhost/tmdt/wp-admin/admin-ajax.php?action=wpuf_file_upload");
-			// oReq.responseType = "arraybuffer";
-			oReq.onload = function(e){
-				console.log(oReq.response);
-			};
-			oReq.send(formData);
-			//var file = new plupload.File(nativeFile);
-			//file.name = this.fileName;
-			//file.type = mimeString;
-			//file.loaded = nativeFile.size;
-			//file.size = nativeFile.size;
-			//file.origSize = nativeFile.size;
-			//console.log("plupload.File");console.log(file);
-			//var canvasImg = document.querySelector("#canvasDrawImage");
-
-			//console.log(file.name);
-			this.isResized = true;
-			//this.uploader.addFile(file);
-			//this.uploader.start();
-			//this.uploader.addFile(canvasImg);
-			//var $container = $('#' + this.container).find('.wpuf-attachment-upload-filelist');
-			//$container.append(
-			//	'<div class="upload-item" id="' + file.id + '"><div class="progress progress-striped active"><div class="bar"></div></div><div class="filename original">' +
-			//	file.name + ' (' + plupload.formatSize(file.size) + ') <b></b>' +
-			//	'</div></div>');
-			//$.ajax({
-			//	url: uploaderSettings.url,
-			//	type: "POST",
-			//	data: {
-			//		'action': 'upload-attachment'
-			//	}
-			//}).done(function(response){console.log(response)});
-			////this.uploader.start();
-		},
-
-		added: function (up, files) {
-			//var $container = $('#' + this.container).find('.wpuf-attachment-upload-filelist');
-			//
-			//this.count += 1;
-			//this.showHide();
-			//
-			//$.each(files, function(i, file) {
-			//	$container.append(
-			//		'<div class="upload-item" id="' + file.id + '"><div class="progress progress-striped active"><div class="bar"></div></div><div class="filename original">' +
-			//		file.name + ' (' + plupload.formatSize(file.size) + ') <b></b>' +
-			//		'</div></div>');
-			//});
-			//
-			//up.refresh(); // Reposition Flash/Silverlight
-			//up.start();
-			//this.isResized = true;
-			if(this.isResized){
-				console.log("added");
-				console.log(files[0]);
-				console.log(files[0].name);
-				//console.log(this.uploader.settings.url);
-				//console.log(this.uploader.settings.flash_swf_url);
-				var $container = $('#' + this.container).find('.wpuf-attachment-upload-filelist');
-
-				this.count += 1;
-				this.showHide();
-
-				$.each(files, function(i, file) {
-					$container.append(
-						'<div class="upload-item" id="' + file.id + '"><div class="progress progress-striped active"><div class="bar"></div></div><div class="filename original">' +
-						file.name + ' (' + plupload.formatSize(file.size) + ') <b></b>' +
-						'</div></div>');
-				});
-
-				up.refresh(); // Reposition Flash/Silverlight
-				up.start();
-				this.isResized = false;
-			}else{
-				var nativeFile = files[0].getNative();
-				this.uploader.removeFile(files[0]);
-				this.fileName = files[0].name;
-				this.addImageUploaded(nativeFile);
-			//	//window.alert("fuck you");
-			}
-		},
-
-		//upload: function (uploader) {
-		//	this.uploader.start();
-		//},
-
-		progress: function (up, file) {
-			var item = $('#' + file.id);
-
-			$('.bar', item).css({ width: file.percent + '%' });
-			$('.percent', item).html( file.percent + '%' );
-		},
-
-		error: function (up, error) {
-			$('#' + this.container).find('#' + error.file.id).remove();
-
-			var msg = '';
-			switch(error.code) {
-				case -600:
-					msg = 'The file you have uploaded exceeds the file size limit. Please try again.';
-					break;
-
-				case -601:
-					msg = 'You have uploaded an incorrect file type. Please try again.';
-					break;
-
-				default:
-					msg = 'Error #' + error.code + ': ' + error.message;
-					break;
-			}
-
-			alert(msg);
-
-			this.count -= 1;
-			this.showHide();
-			this.uploader.refresh();
-		},
-
-		uploaded: function (up, file, response) {
-			// var res = $.parseJSON(response.response);
-
-			$('#' + file.id + " b").html("100%");
-			$('#' + file.id).remove();
-
-			if(response.response !== 'error') {
-				var $container = $('#' + this.container).find('.wpuf-attachment-list');
-				$container.append(response.response);
-			} else {
-				console.log(response);
-				alert(response);
-
-				this.count -= 1;
-				this.showHide();
-			}
 		},
 
 		removeAttachment: function(e) {
@@ -361,3 +162,4 @@
 			}
 		}
 	};
+})(jQuery);
