@@ -69,7 +69,7 @@
 				var reader = new FileReader();
 				reader.onload = function(e){
 					//get image source
-					var imageSource = imagege.target.result;
+					var imageSource = e.target.result;
 					//new image uploaded, clear the old one
 					imageContainer.empty();
 					//create new  image uploaded
