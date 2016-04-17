@@ -1401,7 +1401,9 @@ class WPUF_Render_Form {
             <div id="wpuf-<?php echo $attr['name']; ?>-upload-container">
                 <div class="wpuf-attachment-upload-filelist" data-type="file" data-required="<?php echo $attr['required']; ?>">
                     <a id="wpuf-<?php echo $attr['name']; ?>-pickfiles" class="button file-selector <?php echo ' wpuf_' . $attr['name'] . '_' . $form_id; ?>" href="#"><?php _e( 'Select Image', 'wpuf' ); ?></a>
-
+                    <div class="progress" id="process" style="display: none">
+                        <div id="uploadProcess" class="progress-bar" role="progressbar" style="width:0%">0%</div>
+                    </div>
                     <!--modal allow resize-->
                     <div class="modal fade" tabindex="-1" role="dialog" id="resizeImageModal">
                         <div class="modal-dialog">
@@ -1411,17 +1413,9 @@ class WPUF_Render_Form {
                                     <h4 class="modal-title">resize image</h4>
                                 </div>
                                 <div class="modal-body">
-                                    <div class="row">
-                                        <div id="fileReaderProcessBar" class="col-md-3">
-                                            <div class="progress">
-                                                <div id="uploadProcess" class="progress-bar" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:0%">0%</div>
-                                            </div>
-                                        </div>
-                                        <div id="imageContainer" class="col-md-6"></div>
-                                        <input type="hidden" name="selectArea" value="">
-                                        <img src="http://www.planwallpaper.com/static/images/butterfly-wallpaper.jpeg">
-                                        <canvas id="uniCanvas" width="0" height="0"></canvas>
-                                    </div>
+                                    <input type="hidden" name="selectArea" value="">
+<!--                                        <img src="http://www.planwallpaper.com/static/images/butterfly-wallpaper.jpeg">-->
+                                    <canvas id="uniCanvas" width="0" height="0"></canvas>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
