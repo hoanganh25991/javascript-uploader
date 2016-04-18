@@ -44,7 +44,7 @@
 			}
 		});
 		$("#btnResize").on("click", function(){
-			console.log(wp.resizeImage);
+			//console.log(wp.resizeImage);
 			wp.resizeImage();
 			$("#resizeImageModal").modal("hide");
 		});
@@ -195,7 +195,7 @@
 		},
 
 		resizeImage: function(){
-			//console.log($("#selectArea").val());
+			console.log($("#selectArea").val());
 			var selectArea = JSON.parse($("#selectArea").val());
 			console.log(selectArea);
 			var canvas = $("#uniCanvas").get(0);

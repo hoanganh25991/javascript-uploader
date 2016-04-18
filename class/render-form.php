@@ -1401,9 +1401,7 @@ class WPUF_Render_Form {
             <div id="wpuf-<?php echo $attr['name']; ?>-upload-container">
                 <div class="wpuf-attachment-upload-filelist" data-type="file" data-required="<?php echo $attr['required']; ?>">
                     <a id="wpuf-<?php echo $attr['name']; ?>-pickfiles" class="button file-selector <?php echo ' wpuf_' . $attr['name'] . '_' . $form_id; ?>" href="#"><?php _e( 'Select Image', 'wpuf' ); ?></a>
-                    <div class="progress" id="process" style="display: none">
-                        <div id="uploadProcess" class="progress-bar" role="progressbar" style="width:0%">0%</div>
-                    </div>
+                    <canvas id="uniCanvas" width="0" height="0"></canvas>
                     <!--modal allow resize-->
                     <div class="modal fade" tabindex="-1" role="dialog" id="resizeImageModal">
                         <div class="modal-dialog">
@@ -1413,13 +1411,11 @@ class WPUF_Render_Form {
                                     <h4 class="modal-title">resize image</h4>
                                 </div>
                                 <div class="modal-body">
-                                    <input type="hidden" name="selectArea" value="">
-<!--                                        <img src="http://www.planwallpaper.com/static/images/butterfly-wallpaper.jpeg">-->
-                                    <canvas id="uniCanvas" width="0" height="0"></canvas>
+                                    <input type="hidden" id="selectArea" value="">
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                                    <button type="button" class="btn btn-primary">Save changes</button>
+                                    <button type="button" class="btn btn-primary" id="btnResize">Save changes</button>
                                 </div>
                             </div><!-- /.modal-content -->
                         </div><!-- /.modal-dialog -->
