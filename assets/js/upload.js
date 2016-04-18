@@ -1,98 +1,73 @@
-;(function($){
-	window.WPUF_Uploader = function(browse_button, container, max, type, allowed_type, max_file_size){
-		this.container = container;
+;jQuery.noConflict();
+(function($){
+	window.WPUF_Uploader = function(browse_button, type, allowed_type, max_file_size){
 		this.browse_button = browse_button;
-		this.max = max || 1;
-		this.count = $('#' + container).find('.wpuf-attachment-list > li').length; //count how many items are there
-
-		//if no element found on the page, bail out
-		if(!$('#' + browse_button).length){
-			return;
-		}
-
 		//instantiate the uploader
 		this.uploader = new plupload.Uploader({
 			runtimes: 'html5,html4',
 			browse_button: browse_button,
-			container: container,
-			multipart: true,
-			multipart_params: {
-				action: 'wpuf_file_upload'
-			},
-			multiple_queues: false,
-			multi_selection: false,
-			urlstream_upload: true,
-			file_data_name: 'wpuf_file',
 			max_file_size: max_file_size + 'kb',
 			url: wpuf_frontend_upload.plupload.url + '&type=' + type,
-			flash_swf_url: wpuf_frontend_upload.flash_swf_url,
 			filters: [{
 				title: 'Allowed Files',
 				extensions: allowed_type
 			}]
 		});
-
 		//attach event handlers
+		this.uploader.bind('Init', $.proxy(this, 'init'));
 		this.uploader.bind('FilesAdded', $.proxy(this, 'added'));
+		this.uploader.bind('Error', $.proxy(this, 'error'));
 		this.uploader.init();
 
-		$('#' + container).on('click', 'a.attachment-delete', $.proxy(this.removeAttachment, this));
-		var wp = this;
-		$("#resizeImageModal").on("hide.bs.modal", function(){
-			if(typeof wp.jsCropAPI.destroy === 'function'){
-				wp.jsCropAPI.destroy();
-			}
-		});
-		$("#btnResize").on("click", function(){
-			//console.log(wp.resizeImage);
-			wp.resizeImage();
-			$("#resizeImageModal").modal("hide");
-		});
-		//var windowInnerHeight = window.innerHeight;
-		//var modalHeight = Math.round(windowInnerHeight * 4 / 10);console.log(modalHeight);
-		//$("#imageContainer").css({
-		//	'min-height': 511,
-		//	height: modalHeight
-		//});
 	};
 	WPUF_Uploader.prototype = {
+		selectArea: [],
+		btnResize: [],
+		imageUploaded: [],
+		canvas: [],
+		resizeImageModal: [],
 		scaleImageRate: 1,
 		count: 0,
-		jsCropAPI: {},
+		jCropAPI: {},
 		ACCEPT_WIDTH: 511,
 		ACCEPT_HEIGHT: 511,
+		init: function(){
+			console.log("uploader init");
+			this.resizeImageModal = $("#resizeImageModal");
+			this.canvas = $("#uniCanvas");
+			this.btnResize = $("#btnResize");
+			this.resizeImageModal.on("hide.bs.modal", $.proxy(this, "modalOnHide"));
+			this.btnResize.on("click", $.proxy(this, "btnResizeClick"));
+		},
 		getCoords: function(c){
-			console.log(c);
-			$("#selectArea").val(JSON.stringify(c));
+			console.log("selectArea", c);
+			console.log(this);
+			this.selectArea = c;
+		},
+		modalOnHide: function(){
+			console.log("modalOnHide: %s", "jCropAPI.destroy()");
+			if(typeof this.jCropAPI.destroy === 'function'){
+				this.jCropAPI.destroy();
+			}
+		},
+		btnResizeClick: function(){
+			console.log("btnResizeClick: %s", "resizeImage()\nmodal('hide')");
+			this.resizeImage();
+			$("#resizeImageModal").modal("hide");
 		},
 		added: function(up, files){
-			var wp = this;
+			var wpUpload = this;
+			var resizeImageModal = this.resizeImageModal;
 			var imageContainer = $("<div>");
-
-			/**
-			 * show modal
-			 */
-			var resizeImageModal = $("#resizeImageModal");
-			imageContainer.appendTo(resizeImageModal.find(".modal-body"));
-			//resizeImageModal.on("hide.bs.modal", function(){
-			//	wp.resizeImage();
-			//	if(typeof wp.jsCropAPI.destroy === 'function'){
-			//		wp.jsCropAPI.destroy();
-			//	}
-			//});
-
+			resizeImageModal.find(".modal-body").append(imageContainer);
 			var file = files[0];
 			var nativeFile = file.getNative();
-			console.log(nativeFile);
 			/**
 			 * read nativeFile, append to imageContainer
 			 */
 			if(typeof (FileReader) != "undefined"){
 				var reader = new FileReader();
-				resizeImageModal.on("shown.bs.modal", function(){
-				});
 				reader.onload = function(e){
-
 					//get image source
 					var imageSource = e.target.result;
 					//new image uploaded, clear the old one
@@ -100,38 +75,46 @@
 					//create new  image uploaded
 					var imageUploaded = $("<img>");
 					//add src, id to image uploaded
+					//image has real size >>> on "load" get size WORK
 					imageUploaded.css({
 						'max-width': '100%',
 						height: 'auto'
 					});
 					imageUploaded.attr("id", "imageUploaded");
 					imageUploaded.attr("src", imageSource);
-					imageUploaded.appendTo(imageContainer);
+					wpUpload.imageUploaded = imageUploaded;
+					imageContainer.append(imageUploaded);
 					//append to image container
-					console.log(imageUploaded);
 					imageUploaded.on("load", function(){
-						console.log("load on imageUpload");
-						console.log(imageContainer);
-						console.log(resizeImageModal.height());
+						console.log("imageUploadOnLoad");
 						var imageWidth = imageUploaded.get(0).naturalWidth;
 						var imageHeight = imageUploaded.get(0).naturalHeight;
-						console.log(imageWidth);
-						console.log(imageHeight);
-						if(imageWidth < wp.ACCEPT_WIDTH || imageHeight < wp.ACCEPT_HEIGHT){
+						console.log("imageWidth", imageWidth);
+						console.log("imageHeight", imageHeight);
+						if(imageWidth < wpUpload.ACCEPT_WIDTH || imageHeight < wpUpload.ACCEPT_HEIGHT){
 							imageContainer.empty();
-							window.alert(
-								"imageUploaded: discarded, ACCEPT_WIDTH: " + wp.ACCEPT_WIDTH + ",ACCEPT_HEIGHT: " + wp.ACCEPT_HEIGHT);
+							var replacements = {
+								"%ACCEPT_WIDTH%": wpUpload.ACCEPT_WIDTH,
+								"%ACCEPT_HEIGHT%": wpUpload.ACCEPT_HEIGHT
+							};
+							var warn = "imageUploaded: discarded\n" +
+								"accept WIDTH: %ACCEPT_WIDTH%\n" +
+								"accept HEIGHT: %ACCEPT_WIDTH%";
+
+							warn = warn.replace(/%\w+%/g, function(all){
+								return replacements[all] || all;
+							});
+							window.alert(warn);
 						}else{
 							/**
 							 * set height for imageContainer
 							 */
 							var containerWidth = 0;
-							console.log(wp.scaleImageRate);
 							var containerHeight = Math.round(window.innerHeight * 7 / 10);
 							if(containerHeight < imageHeight){
-								wp.scaleImageRate = containerHeight / imageHeight;
-								console.log(wp.scaleImageRate);
-								containerWidth = imageWidth * wp.scaleImageRate;
+								wpUpload.scaleImageRate = containerHeight / imageHeight;
+								console.log("wp.scaleImageRate: %s", wpUpload.scaleImageRate);
+								containerWidth = imageWidth * wpUpload.scaleImageRate;
 							}
 							if(containerHeight > imageHeight){
 								containerHeight = imageHeight;
@@ -141,50 +124,23 @@
 								width: containerWidth,
 								height: containerHeight
 							});
-
-							//imageContainer.css({
-							//	width: 700,
-							//	height: 511
-							//});
-							//if(wp.count < 1){
-							console.log("count", wp.count);
-							wp.count++;
 							imageContainer.Jcrop({
-								minSize: [wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
-								maxSize: [wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
-								setSelect: [0, 0, wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
+								minSize: [wpUpload.ACCEPT_WIDTH, wpUpload.ACCEPT_HEIGHT],
+								maxSize: [wpUpload.ACCEPT_WIDTH, wpUpload.ACCEPT_HEIGHT],
+								setSelect: [0, 0, wpUpload.ACCEPT_WIDTH, wpUpload.ACCEPT_HEIGHT],
 								aspectRatio: 1,
-								onSelect: wp.getCoords
+								onSelect: $.proxy(wpUpload, 'getCoords')
 							}, function(){
-								wp.jsCropAPI = this;
-								//jsCropAPI.destroy();
+								wpUpload.jCropAPI = this;
 							});
 							resizeImageModal.find(".modal-dialog").css({
 								width: (containerWidth + 38)
 							});
-
 							resizeImageModal.modal("show");
-
-							//}
-
 						}
 
 
 					});
-					//resizeImageModal.modal("show");
-					/**
-					 * jscrop on image >>> has size
-					 */
-					//imageUploaded.Jcrop({
-					//	bgColor: 'black',
-					//	bgOpacity: .4,
-					//	minSize: [wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
-					//	maxSize: [wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
-					//	setSelect: [0, 0, wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
-					//	aspectRatio: 1,
-					//	onSelect: wp.getCoords
-					//});
-
 				};
 				reader.readAsDataURL(nativeFile);
 
@@ -195,45 +151,38 @@
 		},
 
 		resizeImage: function(){
-			//console.log($("#selectArea").val());
-			var selectArea = JSON.parse($("#selectArea").val());
-			console.log(selectArea);
-			var canvas = $("#uniCanvas").get(0);
-			console.log(canvas);
+			var wpUpload = this;
+			var selectArea = this.selectArea;
+			//get(0) get native HTMLElement from jQuery Object
+			/** @var HTMLCanvasElement  canvas*/
+			var canvas = wpUpload.canvas.get(0);
 			var ctx = canvas.getContext('2d');
-			var img = $("#imageUploaded").get(0);
-			console.log(img.width);
-
+			var img = wpUpload.imageUploaded.get(0);
+			//set width, height for canvas
 			canvas.width = selectArea.w;
 			canvas.height = selectArea.h;
-			console.log("resize image by canvas", selectArea);
+			console.log("cropImage\nresizeImage by canvas");
 			var s = this.scaleImageRate;
-			console.log(selectArea.w / s, selectArea.h / s);
-			ctx.drawImage(img, Math.round(selectArea.x / s), Math.round(selectArea.y / s), Math.round(selectArea.w/s), Math.round(selectArea.h/s),
+			//crop + resize (511, 511)
+			ctx.drawImage(img, selectArea.x / s, selectArea.y / s, selectArea.w / s, selectArea.h / s,
 				0, 0, selectArea.w, selectArea.h);
 		},
+		error: function (up, error) {
+			var msg = '';
+			switch(error.code) {
+				case -600:
+					msg = 'The file you have uploaded exceeds the file size limit. Please try again.';
+					break;
 
-		removeAttachment: function(e){
-			e.preventDefault();
+				case -601:
+					msg = 'You have uploaded an incorrect file type. Please try again.';
+					break;
 
-			var self = this,
-				el = $(e.currentTarget);
-
-			if(confirm(wpuf_frontend_upload.confirmMsg)){
-				var data = {
-					'attach_id': el.data('attach_id'),
-					'nonce': wpuf_frontend_upload.nonce,
-					'action': 'wpuf_file_del'
-				};
-
-				jQuery.post(wpuf_frontend_upload.ajaxurl, data, function(){
-					el.parent().parent().remove();
-
-					self.count -= 1;
-					self.showHide();
-					self.uploader.refresh();
-				});
+				default:
+					msg = 'Error #' + error.code + ': ' + error.message;
+					break;
 			}
+			alert(msg);
 		}
 	};
 })(jQuery);

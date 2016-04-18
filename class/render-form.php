@@ -50,10 +50,10 @@ class WPUF_Render_Form {
 
         if ( is_array( $array ) ) {
             if ( isset( $array[$key] ) && $array[$key] == $value )
-                $results[] = $array;
+                {$results[] = $array;}
 
             foreach ($array as $subarray)
-                $results = array_merge( $results, $this->search( $subarray, $key, $value ) );
+                {$results = array_merge( $results, $this->search( $subarray, $key, $value ) );}
         }
 
         return $results;
@@ -1411,7 +1411,6 @@ class WPUF_Render_Form {
                                     <h4 class="modal-title">resize image</h4>
                                 </div>
                                 <div class="modal-body">
-                                    <input type="hidden" id="selectArea" value="">
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -1420,9 +1419,6 @@ class WPUF_Render_Form {
                             </div><!-- /.modal-content -->
                         </div><!-- /.modal-dialog -->
                     </div><!-- /.modal -->
-                    <button id="test"  data-toggle="modal" data-target="#resizeImageModal">show modal</button>
-<!--                    <button id="resizeImage">resize</button>-->
-
                     <ul class="wpuf-attachment-list thumbnails">
                         <?php
                         if ( $has_featured_image ) {
@@ -1453,16 +1449,8 @@ class WPUF_Render_Form {
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jcrop/0.9.12/css/jquery.Jcrop.min.css">
         <script type="text/javascript">
-//            jQuery(document).ready(function(){
-//                new WPUF_Uploader('wpuf-<?php //echo $attr['name']; ?>//-pickfiles', 'wpuf-<?php //echo $attr['name']; ?>//-upload-container', <?php //echo $attr['count']; ?>//, '<?php //echo $attr['name']; ?>//', 'jpg,jpeg,gif,png,bmp', <?php //echo $attr['max_size'] ?>//);
-
-//            });
             jQuery(function($) {
-                new WPUF_Uploader('wpuf-<?php echo $attr['name']; ?>-pickfiles', 'wpuf-<?php echo $attr['name']; ?>-upload-container', <?php echo $attr['count']; ?>, '<?php echo $attr['name']; ?>', 'jpg,jpeg,gif,png,bmp', <?php echo $attr['max_size'] ?>);
-                $("#test").on("click", function(e){
-                    console.log("test click");
-                    e.preventDefault();
-                });
+                new WPUF_Uploader('wpuf-<?php echo $attr['name']; ?>-pickfiles', '<?php echo $attr['name']; ?>', 'jpg,jpeg,gif,png,bmp', <?php echo $attr['max_size'] ?>);
             });
 
         </script>
