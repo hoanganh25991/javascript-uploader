@@ -37,6 +37,17 @@
 		this.uploader.init();
 
 		$('#' + container).on('click', 'a.attachment-delete', $.proxy(this.removeAttachment, this));
+		var wp = this;
+		$("#resizeImageModal").on("hide.bs.modal", function(){
+			if(typeof wp.jsCropAPI.destroy === 'function'){
+				wp.jsCropAPI.destroy();
+			}
+		});
+		$("#btnResize").on("click", function(){
+			console.log(wp.resizeImage);
+			wp.resizeImage();
+			$("#resizeImageModal").modal("hide");
+		});
 		//var windowInnerHeight = window.innerHeight;
 		//var modalHeight = Math.round(windowInnerHeight * 4 / 10);console.log(modalHeight);
 		//$("#imageContainer").css({
@@ -45,6 +56,7 @@
 		//});
 	};
 	WPUF_Uploader.prototype = {
+		scaleImageRate: 1,
 		count: 0,
 		jsCropAPI: {},
 		ACCEPT_WIDTH: 511,
@@ -62,11 +74,12 @@
 			 */
 			var resizeImageModal = $("#resizeImageModal");
 			imageContainer.appendTo(resizeImageModal.find(".modal-body"));
-			resizeImageModal.on("hide.bs.modal", function(){
-				if(typeof wp.jsCropAPI.destroy === 'function'){
-					wp.jsCropAPI.destroy();
-				}
-			});
+			//resizeImageModal.on("hide.bs.modal", function(){
+			//	wp.resizeImage();
+			//	if(typeof wp.jsCropAPI.destroy === 'function'){
+			//		wp.jsCropAPI.destroy();
+			//	}
+			//});
 
 			var file = files[0];
 			var nativeFile = file.getNative();
@@ -76,22 +89,8 @@
 			 */
 			if(typeof (FileReader) != "undefined"){
 				var reader = new FileReader();
-				var uploadProcess = $("#uploadProcess");
-				var process = $("#process");
-				process.css({display: 'block'});
 				resizeImageModal.on("shown.bs.modal", function(){
-					process.css({display: 'none'});
 				});
-				reader.onprogress = function(e){
-					//resizeImageModal.modal("show");
-					if(e.lengthComputable){
-						console.log(e);
-						var percent = Math.round(e.loaded * 100 / e.total);
-						uploadProcess.css({
-							width: percent + '%'
-						}).html(percent + '%');
-					}
-				};
 				reader.onload = function(e){
 
 					//get image source
@@ -120,8 +119,6 @@
 						console.log(imageHeight);
 						if(imageWidth < wp.ACCEPT_WIDTH || imageHeight < wp.ACCEPT_HEIGHT){
 							imageContainer.empty();
-							/** @WARN handle process none by HAND*/
-							process.css({display: 'none'});
 							window.alert(
 								"imageUploaded: discarded, ACCEPT_WIDTH: " + wp.ACCEPT_WIDTH + ",ACCEPT_HEIGHT: " + wp.ACCEPT_HEIGHT);
 						}else{
@@ -129,9 +126,12 @@
 							 * set height for imageContainer
 							 */
 							var containerWidth = 0;
+							console.log(wp.scaleImageRate);
 							var containerHeight = Math.round(window.innerHeight * 7 / 10);
 							if(containerHeight < imageHeight){
-								containerWidth = Math.round(imageWidth * containerHeight / imageHeight);
+								wp.scaleImageRate = containerHeight / imageHeight;
+								console.log(wp.scaleImageRate);
+								containerWidth = imageWidth * wp.scaleImageRate;
 							}
 							if(containerHeight > imageHeight){
 								containerHeight = imageHeight;
@@ -147,23 +147,23 @@
 							//	height: 511
 							//});
 							//if(wp.count < 1){
-								console.log("count", wp.count);
-								wp.count++;
-								imageContainer.Jcrop({
-									minSize: [wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
-									maxSize: [wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
-									setSelect: [0, 0, wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
-									aspectRatio: 1,
-									onSelect: wp.getCoords
-								}, function(){
-									wp.jsCropAPI = this;
-									//jsCropAPI.destroy();
-								});
-								resizeImageModal.find(".modal-dialog").css({
-									width: (containerWidth + 38)
-								});
+							console.log("count", wp.count);
+							wp.count++;
+							imageContainer.Jcrop({
+								minSize: [wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
+								maxSize: [wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
+								setSelect: [0, 0, wp.ACCEPT_WIDTH, wp.ACCEPT_HEIGHT],
+								aspectRatio: 1,
+								onSelect: wp.getCoords
+							}, function(){
+								wp.jsCropAPI = this;
+								//jsCropAPI.destroy();
+							});
+							resizeImageModal.find(".modal-dialog").css({
+								width: (containerWidth + 38)
+							});
 
-								resizeImageModal.modal("show");
+							resizeImageModal.modal("show");
 
 							//}
 
@@ -192,6 +192,25 @@
 				alert("This browser does not support FileReader.");
 			}
 
+		},
+
+		resizeImage: function(){
+			//console.log($("#selectArea").val());
+			var selectArea = JSON.parse($("#selectArea").val());
+			console.log(selectArea);
+			var canvas = $("#uniCanvas").get(0);
+			console.log(canvas);
+			var ctx = canvas.getContext('2d');
+			var img = $("#imageUploaded").get(0);
+			console.log(img.width);
+
+			canvas.width = selectArea.w;
+			canvas.height = selectArea.h;
+			console.log("resize image by canvas", selectArea);
+			var s = this.scaleImageRate;
+			console.log(selectArea.w / s, selectArea.h / s);
+			ctx.drawImage(img, Math.round(selectArea.x / s), Math.round(selectArea.y / s), Math.round(selectArea.w/s), Math.round(selectArea.h/s),
+				0, 0, selectArea.w, selectArea.h);
 		},
 
 		removeAttachment: function(e){
