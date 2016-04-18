@@ -195,7 +195,7 @@
 		},
 
 		resizeImage: function(){
-			console.log($("#selectArea").val());
+			//console.log($("#selectArea").val());
 			var selectArea = JSON.parse($("#selectArea").val());
 			console.log(selectArea);
 			var canvas = $("#uniCanvas").get(0);
