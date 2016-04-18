@@ -1402,6 +1402,7 @@ class WPUF_Render_Form {
                 <div class="wpuf-attachment-upload-filelist" data-type="file" data-required="<?php echo $attr['required']; ?>">
                     <a id="wpuf-<?php echo $attr['name']; ?>-pickfiles" class="button file-selector <?php echo ' wpuf_' . $attr['name'] . '_' . $form_id; ?>" href="#"><?php _e( 'Select Image', 'wpuf' ); ?></a>
                     <canvas id="uniCanvas" width="0" height="0"></canvas>
+
                     <!--modal allow resize-->
                     <div class="modal fade" tabindex="-1" role="dialog" id="resizeImageModal">
                         <div class="modal-dialog">
@@ -1420,25 +1421,14 @@ class WPUF_Render_Form {
                         </div><!-- /.modal-dialog -->
                     </div><!-- /.modal -->
                     <ul class="wpuf-attachment-list thumbnails">
-                        <?php
-                        if ( $has_featured_image ) {
-                            echo $featured_image;
-                        }
-
-                        if ( $has_avatar ) {
-                            $avatar = get_user_meta( $post_id, 'user_avatar', true );
-                            if ( $avatar ) {
-                                echo $featured_image;
-                                printf( '<br><a href="#" data-confirm="%s" class="wpuf-button button wpuf-delete-avatar">%s</a>', __( 'Are you sure?', 'wpuf' ), __( 'Delete', 'wpuf' ) );
-                            }
-                        }
-
-                        if ( $has_images ) {
-                            foreach ($images as $attach_id) {
-                                echo WPUF_Upload::attach_html( $attach_id, $attr['name'] );
-                            }
-                        }
-                        ?>
+                        <li id="imageInfo" style="display: none;" class="wpuf-image-wrap thumbnail">
+                            <div class="wpuf-file-input-wrap">
+                                <input id="imageTitle" type="text" placeholder="Title">
+                                <textarea id="imageCaption" placeholder="Caption"></textarea>
+                                <textarea id="imageDecription" placeholder="Description"></textarea>
+                            </div>
+                            <input id="imageId" type="hidden" name="wpuf_files[image][]">
+                        </li>
                     </ul>
                 </div>
             </div><!-- .container -->

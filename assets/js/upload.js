@@ -7,7 +7,7 @@
 			runtimes: 'html5,html4',
 			browse_button: browse_button,
 			max_file_size: max_file_size + 'kb',
-			url: wpuf_frontend_upload.plupload.url + '&type=' + type,
+			url: wpuf_frontend_upload.ajaxurl,
 			filters: [{
 				title: 'Allowed Files',
 				extensions: allowed_type
@@ -19,8 +19,13 @@
 		this.uploader.bind('Error', $.proxy(this, 'error'));
 		this.uploader.init();
 
+
 	};
 	WPUF_Uploader.prototype = {
+		imageInfo: [],
+		fileName: new Date().toString(),
+		form: [],
+		btnSubmmit: [],
 		selectArea: [],
 		btnResize: [],
 		imageUploaded: [],
@@ -36,12 +41,19 @@
 			this.resizeImageModal = $("#resizeImageModal");
 			this.canvas = $("#uniCanvas");
 			this.btnResize = $("#btnResize");
+			this.btnSubmmit = $("input[type='submit']");
+			this.form = $(this.btnSubmmit.get(0).form);
+			this.imageInfo = $("#imageInfo");
+			/**
+			 * handle event
+			 */
 			this.resizeImageModal.on("hide.bs.modal", $.proxy(this, "modalOnHide"));
 			this.btnResize.on("click", $.proxy(this, "btnResizeClick"));
+			this.btnSubmmit.on("click", $.proxy(this, 'ajaxCall'));
 		},
 		getCoords: function(c){
 			console.log("selectArea", c);
-			console.log(this);
+			//console.log(this);
 			this.selectArea = c;
 		},
 		modalOnHide: function(){
@@ -57,6 +69,7 @@
 		},
 		added: function(up, files){
 			var wpUpload = this;
+			this.fileName = files[0].name;
 			var resizeImageModal = this.resizeImageModal;
 			var imageContainer = $("<div>");
 			resizeImageModal.find(".modal-body").append(imageContainer);
@@ -166,10 +179,63 @@
 			//crop + resize (511, 511)
 			ctx.drawImage(img, selectArea.x / s, selectArea.y / s, selectArea.w / s, selectArea.h / s,
 				0, 0, selectArea.w, selectArea.h);
+			/**
+			 * imageInfo
+			 */
+			var imageTitle = $("#imageTitle");
+			imageTitle.val(wpUpload.fileName);
+			this.imageInfo.css({display: 'block'});
 		},
-		error: function (up, error) {
+		addImageInfo: function(imageId){
+			$("#imageTitle").attr("name", "wpuf_files_data[" + imageId +"][title]");
+			$("#imageCaption").attr("name", "wpuf_files_data[" + imageId +"][caption]");
+			$("#imageDecription").attr("name", "wpuf_files_data[" + imageId +"][desc]");
+			$("#imageId").val(imageId);
+		},
+		ajaxCall: function(event){
+			console.log("formSubmit preventDefault");
+			event.preventDefault();
+			console.log(this);
+			console.log(event);
+			console.log(this.form);
+			/**
+			 * upload image to server
+			 */
+			var wpUpload = this;
+			var dataUrl = this.canvas.get(0).toDataURL();
+			var byteString = atob(dataUrl.split(',')[1]);
+			// separate out the mime component
+			var mimeString = dataUrl.split(',')[0].split(':')[1].split(';')[0];
+			// write the bytes of the string to a typed array
+			var unit8Array = new Uint8Array(byteString.length);
+			for(var i = 0; i < byteString.length; i++){
+				unit8Array[i] = byteString.charCodeAt(i);
+			}
+			var blobFile = new Blob([unit8Array], {type: mimeString});
+			var formData = new FormData();
+			formData.append("wpuf_file", blobFile, wpUpload.fileName);
+			console.log("blobFile", blobFile);
+			var oReq = new XMLHttpRequest();
+			var url = wpUpload.uploader.settings.url + "?action=wpuf_file_upload";
+			console.log(url);
+			oReq.open("post", url);
+			oReq.send(formData);
+			oReq.onload = function(e){
+				var htmlResponse = oReq.response;
+				console.log(oReq.response);
+				var imageIdServer = $(htmlResponse).val();
+				console.log("imageIdServer", imageIdServer);
+				wpUpload.addImageInfo(imageIdServer);
+				/**
+				 * continue form submit
+				 */
+				wpUpload.form.submit();
+			};
+		},
+		error: function(up, error){
+			this.imageInfo.css({display: 'none'});
 			var msg = '';
-			switch(error.code) {
+			switch(error.code){
 				case -600:
 					msg = 'The file you have uploaded exceeds the file size limit. Please try again.';
 					break;
