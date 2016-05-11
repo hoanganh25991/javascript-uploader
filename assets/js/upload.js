@@ -7,7 +7,7 @@
 			runtimes: 'html5,html4',
 			browse_button: browse_button,
 			max_file_size: max_file_size + 'kb',
-			url: wpuf_frontend_upload.ajaxurl + '&type=' + type,
+			url: wpuf_frontend_upload.ajaxurl,
 			filters: [{
 				title: 'Allowed Files',
 				extensions: allowed_type
