@@ -138,8 +138,16 @@
 							width: containerWidth,
 							height: containerHeight
 						});
+						var jcropMinSizeWidth = containerWidth;
+						var jcropMinSizeHeight = containerHeight;
+						if(containerWidth > wpUpload.ACCEPT_WIDTH){
+							jcropMinSizeWidth = wpUpload.ACCEPT_WIDTH;
+						}
+						if(containerHeight > wpUpload.ACCEPT_HEIGHT){
+							jcropMinSizeHeight = wpUpload.ACCEPT_HEIGHT;
+						}
 						imageContainer.Jcrop({
-							minSize: [wpUpload.ACCEPT_WIDTH, wpUpload.ACCEPT_HEIGHT],
+							minSize: [jcropMinSizeWidth, jcropMinSizeHeight],
 							maxSize: [wpUpload.ACCEPT_WIDTH, wpUpload.ACCEPT_HEIGHT],
 							setSelect: [0, 0, wpUpload.ACCEPT_WIDTH, wpUpload.ACCEPT_HEIGHT],
 							aspectRatio: 1,
