@@ -1393,9 +1393,7 @@ class WPUF_Render_Form {
             }
         }
         ?>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jcrop/0.9.12/js/jquery.Jcrop.min.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jcrop/0.9.12/css/jquery.Jcrop.min.css">
+        
 
         <div class="wpuf-fields">
             <div id="wpuf-<?php echo $attr['name']; ?>-upload-container">
@@ -1427,7 +1425,7 @@ class WPUF_Render_Form {
                                 <textarea id="imageCaption" placeholder="Caption"></textarea>
                                 <textarea id="imageDecription" placeholder="Description"></textarea>
                             </div>
-                            <input id="imageId" type="hidden" name="wpuf_files[image][]">
+                            <input id="imageId" type="hidden" name="wpuf_files[featured_image][]">
                         </li>
                     </ul>
                 </div>
@@ -1436,7 +1434,6 @@ class WPUF_Render_Form {
             <span class="wpuf-help"><?php echo stripslashes( $attr['help'] ); ?></span>
 
         </div> <!-- .wpuf-fields -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jcrop/0.9.12/css/jquery.Jcrop.min.css">
         <script type="text/javascript">
             jQuery(function($) {
